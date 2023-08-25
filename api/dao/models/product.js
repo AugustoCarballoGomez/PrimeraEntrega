@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
 const cartSchema = new mongoose.Schema({
-    title: "Producto 2",
-      description: "Descripción 2",
-      price: 110,
-      thumbnail: "thumbnail1.jpg",
-      code: "ABC1232",
+    title: String,
+      description: String,
+      price: Number,
+      thumbnail: String,
+      code: String,
       status: true,
-      stock: 501
+      stock: Number
   
 });
 

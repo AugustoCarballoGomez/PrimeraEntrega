@@ -1,50 +1,45 @@
 const express = require('express');
 const controller = require('./controller');
-const products = require ('./products/products.js')
+const products = require('./products/products.js');
 const cartsRouter = require('./dao/fileSystem/cart');
-const handlebars = require("express-handlebars")
-const { Server } =require ("socket.io")
-const socket = require("socket.io")
-const connectMongo= require("./dao/db")
-
-
+const handlebars = require("express-handlebars");
+const { Server } = require("socket.io");
+const connectMongo = require("./dao/db");
 
 const app = express();
 const port = 8080;
 
-app.use(express.static(__dirname + "/public"))
-app.use(express.urlencoded({extended:true}))
+// Configuración del motor de plantillas Handlebars
+app.engine("handlebars", handlebars.engine());
+app.set("views", __dirname + "/views");
+app.set("view engine", "handlebars");
+
+app.use(express.static(__dirname + "/public"));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.engine("handlebars", handlebars.engine())
-app.set("views" , __dirname +"/views")
-app.set("view engine" ,"handlebars")
 
-
-
-
-const httpServer =app.listen(port, () => {
+const httpServer = app.listen(port, () => {
   console.log(`Servidor iniciado en puerto ${port}`);
 });
 
-const io = new Server(httpServer)
+const io = new Server(httpServer);
 
+app.get('/', (req, res) => {
+  res.render('chat', { messages: [] });
+});
 
-io.on("connection" , socket => {
-  socket.on("message",payload => {
-    console.log(payload,socket.id)
-  })})
+io.on('connection', (socket) => {
+  console.log('A user connected');
 
+  socket.on('chat-message', (data) => {
+    io.emit('chat-message', data);
+  });
 
+  socket.on('disconnect', () => {
+    console.log('A user disconnected');
+  });
+});
 
-io.emit("todos ", "este mensaje es para todos los conectados ")
-
-
-//app.use('/', controller);
-app.use('/', cartsRouter);
-
- 
-
-connectMongo()
-
+connectMongo();
 
 module.exports = app;

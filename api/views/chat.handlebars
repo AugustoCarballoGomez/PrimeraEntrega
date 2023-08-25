@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat</title>
+</head>
+<body>
+    <h1>Chat</h1>
+    <div id="chat-box">
+        {{#each messages}}
+            <div class="message">
+                <span class="user">{{this.user}}</span>
+                <span class="message-text">{{this.message}}</span>
+            </div>
+        {{/each}}
+    </div>
+    <form id="chat-form">
+        <input type="text" id="user-input" placeholder="Nombre de usuario">
+        <input type="text" id="message-input" placeholder="Escribe tu mensaje">
+        <button type="submit">Enviar</button>
+    </form>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+    <script>
+        const socket = io(); // Inicializar Socket.IO
+
+        const chatBox = document.getElementById('chat-box');
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const messageInput = document.getElementById('message-input');
+
+        // Manejar el envío del formulario
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const user = userInput.value;
+            const message = messageInput.value;
+
+            if (user && message) {
+                // Enviar el mensaje al servidor a través de Socket.IO
+                socket.emit('chat-message', { user, message });
+                messageInput.value = '';
+            }
+        });
+
+        // Manejar los mensajes recibidos del servidor
+        socket.on('chat-message', (data) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = `
+                <span class="user">${data.user}</span>
+                <span class="message-text">${data.message}</span>
+            `;
+            chatBox.appendChild(messageDiv);
+        });
+    </script>
+</body>
+</html>
