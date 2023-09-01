@@ -8,6 +8,21 @@
     <ul>
         {{#each products}}
             <li>{{this.nombre}} - {{this.precio}}</li>
+            <div>
+    <h3>{{this.name}}</h3>
+    <p>Precio: ${{this.price}}</p>
+    <p>Cantidad: {{this.quantity}}</p>
+  </div>
+    <div>
+    <h2>{{this.name}}</h2>
+    <p>Precio: ${{this.price}}</p>
+    <p>Categoría: {{this.category}}</p>
+    <p>Descripción: {{this.description}}</p>
+    <form action="/carts/{{cartId}}/products/{{this._id}}" method="post">
+      <button type="submit">Agregar al Carrito</button>
+    </form>
+  </div>
+
         {{/each}}
     </ul>
 </body>

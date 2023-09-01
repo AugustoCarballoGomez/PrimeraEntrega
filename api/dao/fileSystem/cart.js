@@ -5,6 +5,114 @@ const path = require('path');
 const products = require('../../products/products.js');
 const productsFilePath = path.join(__dirname, 'products.json');
 
+async function getProducts(req, res) {
+  const { limit = 10, page = 1, sort, query, category, availability } = req.query;
+
+  // Filtros basados en los parámetros de consulta
+  let filters = {};
+  if (query) {
+    filters.type = query;
+  }
+  if (category) {  // Búsqueda por categoría
+    filters.category = category;
+  }
+  if (availability) {  // Búsqueda por disponibilidad
+    filters.availability = availability === 'true';
+  }
+
+  let sortOptions = {};
+  if (sort === 'asc') {
+    sortOptions = { price: 1 };
+  } else if (sort === 'desc') {
+    sortOptions = { price: -1 };
+  }
+
+  try {
+    const totalProducts = await Product.countDocuments(filters);
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    const products = await Product.find(filters)
+      .sort(sortOptions)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const response = {
+      status: 'success',
+      payload: products,
+      totalPages,
+      prevPage: page > 1 ? parseInt(page) - 1 : null,
+      nextPage: page < totalPages ? parseInt(page) + 1 : null,
+      page: parseInt(page),
+      hasPrevPage: page > 1,
+      hasNextPage: page < totalPages,
+      prevLink: page > 1 ? `/products?limit=${limit}&page=${page - 1}&sort=${sort}&query=${query}` : null,
+      nextLink: page < totalPages ? `/products?limit=${limit}&page=${page + 1}&sort=${sort}&query=${query}` : null,
+    };
+
+    res.json(response);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+
+router.delete('/:cid/products/:pid')   // eliminar producto del carrito
+async function removeProductFromCart(req, res) {
+  const cartId = req.params.cid;
+  const productId = req.params.pid;
+
+  try {
+    const updatedCart = await Cart.findByIdAndUpdate(
+      cartId,
+      { $pull: { products: { _id: productId } } },
+      { new: true }
+    );
+
+    res.json(updatedCart);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+
+router.put('/:cid')  // actualizar carrito
+async function updateCart(req, res) {
+  const cartId = req.params.cid;
+  const newProducts = req.body.products;
+
+  try {
+    const updatedCart = await Cart.findByIdAndUpdate(
+      cartId,
+      { products: newProducts },
+      { new: true }
+    );
+
+    res.json(updatedCart);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+
+router.put('/:cid/products/:pid')  // actualizar cantidad de producto en el carrito
+async function updateProductQuantity(req, res) {
+  const cartId = req.params.cid;
+  const productId = req.params.pid;
+  const newQuantity = req.body.quantity;
+
+  try {
+    const updatedCart = await Cart.findOneAndUpdate(
+      { _id: cartId, 'products._id': productId },
+      { $set: { 'products.$.quantity': newQuantity } },
+      { new: true }
+    );
+
+    res.json(updatedCart);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 router.get('/carts', (req, res) => {
   try {
     const productsData = fs.readFileSync(productsFilePath, 'utf-8');
@@ -82,5 +190,13 @@ router.delete('/:id', (req, res) => {
   }
 });
 
+module.exports = {
+  removeProductFromCart,
+  updateCart,
+  updateProductQuantity,
+};
 
+module.exports = {
+  getProducts,
+};
 module.exports = router;
