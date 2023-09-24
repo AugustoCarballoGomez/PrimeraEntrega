@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const products = require('../../products/products.js');
 const productsFilePath = path.join(__dirname, 'products.json');
+const express =require("express")
 
 async function getProducts(req, res) {
   const { limit = 10, page = 1, sort, query, category, availability } = req.query;
@@ -143,6 +144,45 @@ router.post('/carts', (req, res) => {
     res.status(500).json({ error: 'Error al agregar los productos' });
   }
 });
+
+app.get('/', (req, res) => {
+
+  const data = {
+
+    title: 'Página de Inicio',
+
+  };
+
+  res.render('index', {
+
+    layout: 'main.handlebars', // Especifica el layout a utilizar
+
+  });
+
+});
+
+
+
+// app.get('/productos', requireAuth, (req, res) => {
+//   const user = users.find(u => u.id === req.session.userId);
+
+//   res.send(`
+//     <h1>Bienvenido a la página de productos</h1>
+//     <p>Usuario: ${user.email}</p>
+//     <p>Rol: ${user.role}</p>
+//     <a href="/logout">Cerrar sesión</a>
+//   `);
+// });
+// app.get('/login', (req, res) => {
+//   res.send(`
+//     <h1>Iniciar sesión</h1>
+//     <form method="post" action="/login">
+//       <input type="email" name="email" placeholder="Correo electrónico" required>
+//       <input type="password" name="password" placeholder="Contraseña" required>
+//       <button type="submit">Iniciar sesión</button>
+//     </form>
+//   `);
+// });
 
 
 router.put('/products/:id', (req, res) => {
